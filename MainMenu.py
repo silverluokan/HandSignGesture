@@ -4,9 +4,7 @@ from PIL import Image, ImageTk
 import numpy as np
 import mediapipe as mp
 from tensorflow.keras.models import load_model
-scaled_value = 0.5
-
-recognized_word = ""
+scaled_value = 0.9
 class CustomFrameApp:
     def __init__(self, master):
         self.master = master
@@ -56,7 +54,7 @@ class CustomFrameApp:
         self.slider_var.trace_add("write", self.update_slider_value)
 
         # Initialize camera capture
-        self.video_capture = cv2.VideoCapture(1)  # Change the index if using a different camera
+        self.video_capture = cv2.VideoCapture(0)  # Change the index if using a different camera
 
         # Create a label for displaying camera feed
         self.camera_label = tk.CTkLabel(self.MainCamera)
@@ -70,16 +68,9 @@ class CustomFrameApp:
         # Initialize gesture recognition sequence
         self.sequence = []
 
-        self.sentence_label = tk.CTkLabel(self.MainMenus, text="Sentence: ", font=("Arial", 14))
-        self.sentence_label.pack(pady=(20, 5))
-
-        self.add_word_btn = tk.CTkButton(self.MainMenus, text="ADD WORD", command=self.add_word_to_sentence)
-        self.add_word_btn.pack(pady=5)
-
         # Create a label for displaying recognized gestures
         self.recognized_label = tk.CTkLabel(self.MainMenus, text="Recognized Gesture: ", font=("Arial", 14))
         self.recognized_label.pack(pady=(20, 5))  # Padding added to adjust spacing
-
 
         # Call the function to start displaying the camera feed
         self.show_camera_feed()
@@ -106,7 +97,7 @@ class CustomFrameApp:
         self.camera_label.after(30, self.show_camera_feed)
 
     def gesture_recognition(self, frame):
-        global scaled_value, recognized_word
+        global scaled_value
         image, results = self.mediapipe_detection(frame)
         keypoints = self.extract_keypoints(results)
         self.sequence.append(keypoints)
@@ -143,12 +134,6 @@ class CustomFrameApp:
                         results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
             21 * 3)
         return np.concatenate([pose, face, lh, rh])
-
-    def add_word_to_sentence(self):
-        global recognized_word
-        current_text = self.sentence_label.cget("text")  # Get current text of the label
-        updated_text = f"{current_text} {recognized_word}" if current_text != "Sentence: " else f"{current_text}{recognized_word}"
-        self.sentence_label.configure(text=updated_text)  # Update label text
 
     def update_slider_value(self, *args):
         global scaled_value

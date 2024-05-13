@@ -10,9 +10,10 @@ from tensorflow.keras.callbacks import TensorBoard
 import time  # Add this import statement at the top
 
 # Set up folders and paths
+current_word_index = 0
 DATA_PATH = 'MP_Data'
-actions = np.array(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])
-no_sequences = 100
+actions = np.array(['HELLO', 'I LOVE YOU', 'PLEASE', 'GOOD MORNING', 'FINISH', 'HELP', 'OK'])
+no_sequences = 50
 sequence_length = 30
 
 # Create necessary folders for data collection
@@ -21,6 +22,7 @@ for action in actions:
         folder_path = os.path.join(DATA_PATH, action, str(sequence))
         os.makedirs(folder_path, exist_ok=True)
 
+
 # Check if training data needs collection for a specific action and sequence
 def needs_data_collection(action, sequence):
     return not all(
@@ -28,26 +30,50 @@ def needs_data_collection(action, sequence):
         for frame_num in range(sequence_length)
     )
 
+
 # Data collection loop
 def collect_data(cap, holistic):
-    for action in actions:
-        for sequence in range(no_sequences):
-            if needs_data_collection(action, sequence):
-                print(f"Collecting data for {action} - Sequence {sequence}")
-                for frame_num in range(sequence_length):
-                    ret, frame = cap.read()
-                    image, results = mediapipe_detection(frame, holistic)
-                    draw_styled_landmarks(image, results)
-                    save_keypoints(results, action, sequence, frame_num)
-                    cv2.imshow('Frame', image)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to stop data collection
-                        return
+    global current_word_index
+    action = actions[current_word_index]
+    collection_complete = False  # Flag to indicate data collection completion
+    for sequence in range(no_sequences):
+        print(f"Collecting data for {action} - Sequence {sequence}")
+        for frame_num in range(sequence_length):
+            if needs_data_collection(action, sequence, frame_num):
+                ret, frame = cap.read()
+                image, results = mediapipe_detection(frame, holistic)
+                draw_styled_landmarks(image, results)  # Draw landmarks on the frame
+                cv2.imshow('Frame', image)  # Show the frame with landmarks
+                save_keypoints(results, action, sequence, frame_num)
+
+    print(f"Data collection for {action} completed. Press 'N' to go to the next word, 'Q' to quit, and 'A' to Train")
+    key = cv2.waitKey(0)
+    if key == ord('q') or key == 27:
+        return
+    elif key == ord('n') or key == ord('N'):
+        current_word_index = (current_word_index + 1)
+        print(f"Current word index: {current_word_index} ({actions[current_word_index]})")
+        start_collection_on_key_press(cap, holistic)
+    elif key == ord('a') or key == ord('A'):
+        cap.release()
+        cv2.destroyAllWindows()
+        # Load and preprocess data
+        X_train, X_test, y_train, y_test = load_data()
+        # Build and train LSTM model
+        build_train_model(X_train, X_test, y_train, y_test)
+
+
+def needs_data_collection(action, sequence, frame_num):
+    file_path = os.path.join(DATA_PATH, action, str(sequence), f"{frame_num}.npy")
+    return not os.path.isfile(file_path)
+
 
 # Function to save keypoints as .npy files
 def save_keypoints(results, action, sequence, frame_num):
     keypoints = extract_keypoints(results)
     npy_path = os.path.join(DATA_PATH, action, str(sequence), f"{frame_num}.npy")
     np.save(npy_path, keypoints)
+
 
 # Load and preprocess data for training
 def load_data():
@@ -68,6 +94,7 @@ def load_data():
 
     return train_test_split(X, y, test_size=0.05)
 
+
 # Build and train LSTM model
 def build_train_model(X_train, X_test, y_train, y_test):
     log_dir = os.path.join('Logs')
@@ -84,8 +111,9 @@ def build_train_model(X_train, X_test, y_train, y_test):
 
     model.compile(optimizer="Adam", loss='categorical_crossentropy', metrics=['accuracy'])
     model.fit(X_train, y_train, epochs=2000, callbacks=[tb_callback], validation_data=(X_test, y_test))
-    model.save('action_recognition_model.h5')
+    model.save('action_recognition_model.keras')
     return model
+
 
 # Helper functions for Mediapipe processing
 def extract_keypoints(results):
@@ -109,6 +137,7 @@ def mediapipe_detection(image, model):
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # COLOR COVERSION RGB 2 BGR
     return image, results
 
+
 def draw_landmarks(image, results):
     mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION)  # Draw face connections
     mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)  # Draw pose connections
@@ -116,6 +145,7 @@ def draw_landmarks(image, results):
                               mp_holistic.HAND_CONNECTIONS)  # Draw left hand connections
     mp_drawing.draw_landmarks(image, results.right_hand_landmarks,
                               mp_holistic.HAND_CONNECTIONS)  # Draw right hand connections
+
 
 def draw_styled_landmarks(image, results):
     # Draw face connections
@@ -139,6 +169,7 @@ def draw_styled_landmarks(image, results):
                               mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                               )
 
+
 def start_collection_on_key_press(cap, holistic):
     print("Press 'S' to start data collection.")
     while True:
@@ -150,6 +181,8 @@ def start_collection_on_key_press(cap, holistic):
             break
         elif key == ord('q') or key == 27:
             break
+    print("Press 'A' to train the model.")
+
 
 if __name__ == "__main__":
     mp_holistic = mp.solutions.holistic
@@ -162,9 +195,3 @@ if __name__ == "__main__":
 
     cap.release()
     cv2.destroyAllWindows()
-
-    # Load and preprocess data
-    X_train, X_test, y_train, y_test = load_data()
-
-    # Build and train LSTM model
-    model = build_train_model(X_train, X_test, y_train, y_test)
