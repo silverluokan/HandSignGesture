@@ -10,7 +10,7 @@ from tensorflow.keras.callbacks import TensorBoard
 import time
 
 # Set up folders and paths
-DATA_PATH = 'MP_Data'
+DATA_PATH = 'MP_Data_Alphabet'
 actions = np.array(['HELLO', 'PLEASE', 'WELCOME', 'YES', 'DEAF', 'FOOD', 'THANK YOU'])
 no_sequences = 60
 sequence_length = 30

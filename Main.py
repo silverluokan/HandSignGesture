@@ -8,22 +8,22 @@ class App:
     def __init__(self, master):
         self.master = master
         self.master.title("Gesture Recognition App")
-        self.master.geometry("400x200")
+        self.master.geometry("300x250")
 
         self.frame = tk.CTkFrame(self.master)
         self.frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        self.train_button = tk.CTkButton(self.frame, text="Run Training Script", command=self.run_training_script)
-        self.train_button.pack(pady=10)
-
-        self.test_button = tk.CTkButton(self.frame, text="Run Testing Script", command=self.run_testing_script)
+        self.test_button = tk.CTkButton(self.frame, text="Run Testing Alphabet Script", command=self.run_testing_alphabet)
         self.test_button.pack(pady=10)
 
-    def run_training_script(self):
-        self.run_script('Training.py')
+        self.test_button = tk.CTkButton(self.frame, text="Run Testing Word Script", command=self.run_testing_word)
+        self.test_button.pack(pady=10)
 
-    def run_testing_script(self):
-        self.run_script('tkTesting.py')
+    def run_testing_alphabet(self):
+        self.run_script('TestingAlphabet.py')
+
+    def run_testing_word(self):
+        self.run_script('TestingWord.py')
 
     def run_script(self, script_name):
         # Print current working directory and python executable for debugging
