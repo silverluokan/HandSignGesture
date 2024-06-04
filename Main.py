@@ -8,22 +8,41 @@ class App:
     def __init__(self, master):
         self.master = master
         self.master.title("Gesture Recognition App")
-        self.master.geometry("300x250")
+        self.master.geometry("330x250")  # Adjusted width for side-by-side layout
 
-        self.frame = tk.CTkFrame(self.master)
-        self.frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        # Custom frame with blue background and rounded corners
+        self.welcome_frame = tk.CTkFrame(self.master)
+        self.welcome_frame.pack(fill=tk.X, padx=10, pady=10)  # Adjusted padding
 
-        self.test_button = tk.CTkButton(self.frame, text="Run Testing Alphabet Script", command=self.run_testing_alphabet)
-        self.test_button.pack(pady=10)
+        # Label for the welcome message inside the custom frame
+        self.welcome_label = tk.CTkLabel(
+            self.welcome_frame,
+            text="WELCOME TO GESTURE APPLICATION",
+            font=("Helvetica", 16),
+            text_color="white",
+        )
+        self.welcome_label.pack(fill=tk.X, pady=5)  # Adjusted padding
 
-        self.test_button = tk.CTkButton(self.frame, text="Run Testing Word Script", command=self.run_testing_word)
-        self.test_button.pack(pady=10)
+        # Converted buttons to labels
+        self.test_button_alphabet = tk.CTkLabel(
+            self.master, text="Run Testing Alphabet Script", font=("Helvetica", 12), bg_color="green", corner_radius=5
+        )
+        self.test_button_alphabet.pack(fill=tk.X, padx=50, pady=35)  # Reduced padding
+
+        self.test_button_word = tk.CTkLabel(
+            self.master, text="Run Testing Word Script", font=("Helvetica", 12), bg_color="green", corner_radius=5
+        )
+        self.test_button_word.pack(fill=tk.X, padx=50, pady=0)  # Reduced padding
+
+        # Bind keyboard events to functions
+        self.master.bind('1', lambda event: self.run_testing_alphabet())
+        self.master.bind('2', lambda event: self.run_testing_word())
 
     def run_testing_alphabet(self):
-        self.run_script('TestingAlphabet.py')
+        self.run_script('TestingAlphabetsTflite.py')
 
     def run_testing_word(self):
-        self.run_script('TestingWord.py')
+        self.run_script('TestingWordTflite.py')
 
     def run_script(self, script_name):
         # Print current working directory and python executable for debugging

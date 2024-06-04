@@ -169,7 +169,7 @@ class CustomFrameApp:
     def add_word_to_sentence(self):
         global recognized_word
         sentence = self.sentence_label.cget("text")
-        new_sentence = f"{sentence} {recognized_word}".strip()
+        new_sentence = f"{sentence}{recognized_word}".strip()
         self.sentence_label.configure(text=new_sentence)
 
     def clear_sentence(self):
