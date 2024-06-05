@@ -92,7 +92,7 @@ def build_train_model(X_train, X_test, y_train, y_test):
 
     model.compile(optimizer="Adam", loss='categorical_crossentropy', metrics=['accuracy'])
     model.fit(X_train, y_train, epochs=1500, callbacks=[tb_callback], validation_data=(X_test, y_test))
-    model.save('alphabets_model.keras')
+    model.save('words_model.keras')
     return model
 
 def extract_keypoints(results):
